@@ -13,6 +13,7 @@ import Arquivos.ArquivoLista;
 import Arquivos.ArquivoListaProduto;
 import Arquivos.ArquivoProduto;
 import Arquivos.ArquivoUsuario;
+//import Menu.MenuUsuario;
 
 public class MenuProduto {
     public Scanner console;
@@ -22,6 +23,7 @@ public class MenuProduto {
     public ArquivoLista arqList;
     public HashExtensivel<ParIDGTIN> iCode;
     public ArvoreBMais<ParUsuarioLista> arvoreLista;
+   // public MenuUsuario menuUsu;
 
     public MenuProduto() throws Exception {
         arqUsu = new ArquivoUsuario();
@@ -29,6 +31,7 @@ public class MenuProduto {
         arqListaProduto = new ArquivoListaProduto(); // ✅ inicializa aqui
         arqProduto = new ArquivoProduto(); // Inicializando o arquivo de produtos
         console = new Scanner(System.in);
+       /// menuUsu = new MenuUsuario();
 
         iCode = new HashExtensivel<>(ParIDGTIN.class.getConstructor(),
                 4,
@@ -44,7 +47,7 @@ public class MenuProduto {
         console = new Scanner(System.in);
         int opcao;
         do {
-            System.out.println("\n\nEasyGift 2.0");
+            System.out.println("\n\nEasyGift 3.0");
             System.out.println("---------");
             System.out.println("> Produtos - Autenticado");
             System.out.println("\n0 - Voltar");
@@ -54,11 +57,11 @@ public class MenuProduto {
             System.out.print("\nOpção: ");
 
             opcao = console.nextInt();
-            int id;
 
             switch (opcao) {
                 case 0:
                     System.out.println("Voltando...");
+                    //menuUsu.menuUsuario1();
                     break;
                 case 1:
                     buscarProduto(idUsuario);

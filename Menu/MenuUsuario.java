@@ -73,7 +73,7 @@ public class MenuUsuario {
         int opcao;
         console = new Scanner(System.in);
         do {
-            System.out.println("\n\nEasyGift 1.0");
+            System.out.println("\n\nEasyGift 3.0");
             System.out.println("---------");
             System.out.println("> Início - Autenticado");
 
@@ -96,22 +96,19 @@ public class MenuUsuario {
                     menuProduto.menu(idUsuario);
                     break;
                 case 3:
-                    atualizarSenha();
-                    break;
-                case 4:
-                    deletarUsuario();
+                    menuUsuario1();
                     break;
                 default:
                     break;
             }
-        } while (opcao != 0 && opcao != 2 && opcao != 3);
+        } while (opcao != 0);
     }
 
-    public void atualizarSenha() throws Exception {
+    public void atualizarDados() throws Exception {
         console = new Scanner(System.in);
-        System.out.println("\n\nEasyGift 1.0");
+        System.out.println("\n\nEasyGift 3.0");
         System.out.println("---------");
-        System.out.println("> Alteração de Senha - Autenticação de Segurança");
+        System.out.println("> Alteração de Dados - Autenticação de Segurança");
         System.out.println("Digite o email cadastrado na sua conta: ");
         String email = console.nextLine();
         System.out.println("Digite sua senha atual: ");
@@ -124,15 +121,34 @@ public class MenuUsuario {
 
             if (u != null && u.verificarSenha(senha)) {
                 System.out.println("Autenticação feita com sucesso!");
-                System.out.println("\n\nDigite sua nova senha: ");
+
+                System.out.println("\n\nDigite sua nova senha: (ENTER PARA MANTER)");
                 String newSenha = console.nextLine();
-                u.alterarSenha(newSenha);
+
+                if(!newSenha.isEmpty()) {
+                    u.alterarSenha(newSenha);
+                }
+
+                System.out.println("Digite sua nova pergunta de segurança: (ENTER PARA MANTER)");
+                String newQuest = console.nextLine();
+
+                if(!newQuest.isEmpty()) {
+                    u.setPerguntaSecreta(newQuest);
+                }
+
+                System.out.println("Digite sua nova resposta de segurança: (ENTER PARA MANTER)");
+                String newAnsw = console.nextLine();
+
+                if(!newAnsw.isEmpty()) {
+                    u.setRespostaSecreta(newAnsw);
+                }
+                
                 boolean resultado = arqUsu.update(u);
 
                 if (resultado) {
-                    System.out.println("Senha atualizada com sucesso!");
+                    System.out.println("Dados atualizados com sucesso!");
                 } else {
-                    System.out.println("Houve um problema ao atualizar sua senha, tente novamente.");
+                    System.out.println("Houve um problema ao atualizar seus dados, tente novamente.");
                 }
             } else {
                 System.out.println("E-mail ou senha incorretos.");
@@ -146,7 +162,7 @@ public class MenuUsuario {
 
     public void deletarUsuario() throws Exception {
         console = new Scanner(System.in);
-        System.out.println("\n\nEasyGift 1.0");
+        System.out.println("\n\nEasyGift 3.0");
         System.out.println("---------");
         System.out.println("> Exclusão de Usuário - Autenticação de Segurança");
         System.out.println("\nDigite o email cadastrado na sua conta: ");
@@ -177,7 +193,7 @@ public class MenuUsuario {
         }
     }
 
-    public void menuUsuario1() {
+    public void menuUsuario1() throws Exception {
         System.out.println("\n\nEasy Gift 3.0");
         System.out.println("> Autenticado > Menu Usuário");
         System.out.println("\n 0 - Voltar");
@@ -188,12 +204,13 @@ public class MenuUsuario {
         int opcao = console.nextInt();
         switch (opcao) {
             case 0:
+                System.out.println("\n\nVoltando...");
                 break;
             case 1:
                 deletarUsuario();
                 break;
             case 2:
-                alterarSenha();
+                atualizarDados();
                 break;
             default:
                 break;

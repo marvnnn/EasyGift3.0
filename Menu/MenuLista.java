@@ -218,7 +218,7 @@ public class MenuLista {
         console = new Scanner(System.in);
         int opcao;
         do {
-            System.out.println("\n\nEasyGift 2.0");
+            System.out.println("\n\nEasyGift 3.0");
             System.out.println("---------");
             System.out.println("> Listas - Autenticado");
             System.out.println("\n0 - Voltar");
