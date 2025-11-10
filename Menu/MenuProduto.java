@@ -300,7 +300,7 @@ public class MenuProduto {
         for (Map.Entry<Integer, Float> e : ordenados) {
             Produto p = arqProduto.read(e.getKey());
             if (p != null && p.isAtivo()) {
-                System.out.printf("- %s (%.3f)\n", p.getNome(), e.getValue());
+                System.out.printf( p.getId() + "- %s (%.3f)\n", p.getNome(), e.getValue());
             }
         }
     }

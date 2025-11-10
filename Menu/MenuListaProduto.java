@@ -1,4 +1,5 @@
 package Menu;
+
 import java.util.Scanner;
 
 import Arquivos.ArquivoLista;
@@ -81,34 +82,55 @@ public class MenuListaProduto {
      */
     public void incluirProduto(int idLista, int idUsuario) {
         try {
-            int idProduto = menuProduto.listarProdutos(idUsuario); // Lista produtos e retorna o ID escolhido
-        if (idProduto != -1) {
-            Produto p = arqProduto.read(idProduto);
-            if(p.isAtivo()) {
-                System.out.println("Digite a quantidade: ");
-                int quantidade = console.nextInt();
+            System.out.println("\n\n---------");
+            System.out.println("> Adicionar produto à lista");
+            System.out.println("1 - Buscar produto por palavra");
+            System.out.println("2 - Listar todos os produtos");
+            System.out.print("Opção: ");
+            int opc = console.nextInt();
+            console.nextLine();
+
+            int idProduto = -1;
+
+            // ✅ Permite escolher entre buscar ou listar
+            if (opc == 1) {
+                menuProduto.buscarProdutoPorPalavra(idUsuario); // mostra resultados da busca
+                System.out.print("\nDigite o ID do produto que deseja adicionar: ");
+                idProduto = console.nextInt();
                 console.nextLine();
-                System.out.println("Digite as observações: ");
-                String observacoes = console.nextLine();
-                ListaProduto lp = new ListaProduto(idLista, idProduto, quantidade, observacoes);
-                //System.out.println("a");
-                int id = arqListaProduto.create(lp);
-                //System.out.println("b");
-                indiceListaProduto.create(new ParIDListaProduto(idLista, idProduto));
-                System.out.println("c");
-                System.out.println("✅ Produto adicionado à lista (ID da relação = " + id + ")");
+            } else if (opc == 2) {
+                idProduto = menuProduto.listarProdutos(idUsuario);
+            } else {
+                System.out.println("Opção inválida.");
+                return;
             }
-            else {
-                System.out.println("Não foi possível adicionar o produto a lista pois ele está INATIVO.");
+
+            // ✅ Verifica e adiciona o produto à lista
+            if (idProduto != -1) {
+                Produto p = arqProduto.read(idProduto);
+                if (p != null && p.isAtivo()) {
+                    System.out.print("Digite a quantidade: ");
+                    int quantidade = console.nextInt();
+                    console.nextLine();
+                    System.out.print("Digite as observações: ");
+                    String observacoes = console.nextLine();
+
+                    ListaProduto lp = new ListaProduto(idLista, idProduto, quantidade, observacoes);
+                    int id = arqListaProduto.create(lp);
+                    indiceListaProduto.create(new ParIDListaProduto(idLista, idProduto));
+
+                    System.out.println("✅ Produto adicionado à lista (ID da relação = " + id + ")");
+                } else {
+                    System.out.println("❌ Produto inativo ou não encontrado.");
+                }
+            } else {
+                System.out.println("Nenhum produto selecionado.");
             }
-            
-        } else {
-            System.out.println("Nenhum produto selecionado.");
+
+        } catch (Exception e) {
+            System.err.println("Erro ao incluir produto: " + e.getMessage());
+            e.printStackTrace();
         }
-        } catch(Exception e) {
-            System.out.println(e.getLocalizedMessage());
-        }
-        
     }
 
     /**
@@ -122,10 +144,7 @@ public class MenuListaProduto {
 
             // Array para mapear índice da exibição para o ID do registro
 
-
             listarProdutos(idLista);
-
-            
 
             // Pergunta ao usuário qual produto excluir
             System.out.print("Digite o número do produto que deseja excluir (0 para cancelar): ");
@@ -181,15 +200,14 @@ public class MenuListaProduto {
                     if (lp.getIdLIsta() == idLista) {
                         Produto produto = arqProduto.read(lp.getIdProduto());
                         if (produto != null) {
-                            if(produto.isAtivo()) {
+                            if (produto.isAtivo()) {
                                 System.out.println("(" + index + ") " + produto.getNome() + " (x"
-                                    + lp.getQuantidade() + ") - Observações: "
-                                    + lp.getObservacoes());
-                            }
-                            else {
+                                        + lp.getQuantidade() + ") - Observações: "
+                                        + lp.getObservacoes());
+                            } else {
                                 System.out.println("(" + index + ") " + produto.getNome() + " (x"
-                                    + lp.getQuantidade() + ") - Observações: "
-                                    + lp.getObservacoes() + " - (INATIVO)");
+                                        + lp.getQuantidade() + ") - Observações: "
+                                        + lp.getObservacoes() + " - (INATIVO)");
                             }
                             index++;
                             count++;
