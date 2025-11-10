@@ -136,19 +136,33 @@ public class MenuLista {
     public void verLista(int id,int idUsuario) throws Exception {
         Lista lista = arqList.read(id);
         if (lista != null) {
-            System.out.println("\n--- Detalhes da Lista ---");
-            System.out.println("Nome: " + lista.getNome());
-            System.out.println("Descrição: " + lista.getDescricao());
-            System.out.println("Data de Criação: " + lista.getDataCriacao());
-            System.out.println("Data de Encerramento: " + lista.getDataLimite());
-            System.out.println("Código compartilhável: " + lista.getCodigoCompartilhavel());
-            System.out.println("\n 1 - Gerenciar produtos");
-            System.out.println(" 0 - Voltar");
-            int op = console.nextInt();
-            if (op == 1) {
-                mlp.menu(id,idUsuario);
-            }
+            int op = 0;
+            do {
+                System.out.println("\n--- Detalhes da Lista ---");
+                System.out.println("Nome: " + lista.getNome());
+                System.out.println("Descrição: " + lista.getDescricao());
+                System.out.println("Data de Criação: " + lista.getDataCriacao());
+                System.out.println("Data de Encerramento: " + lista.getDataLimite());
+                System.out.println("Código compartilhável: " + lista.getCodigoCompartilhavel());
+                System.out.println("\n 1 - Gerenciar produtos");
+                System.out.println(" 0 - Voltar");
+                op = console.nextInt();
+                
+                switch(op) {
+                    case 0:
+                        System.out.println("Voltando...");
+                        break;
 
+                    case 1:
+                        mlp.menu(id, idUsuario);
+                        break;
+                    
+                    default: 
+                        System.out.println("Opção inválida.");
+                        break;
+                }
+
+            } while(op != 0);
         } else {
             System.out.println("\nLista não encontrada.");
         }
@@ -288,6 +302,7 @@ public class MenuLista {
         System.out.println("Nome do Criador: " + lista.getNomeAutor());
         System.out.println("Descrição: " + lista.getDescricao());
         System.out.println("Data de Encerramento: " + lista.getDataLimite());
+        mlp.listarProdutos(lista.getId());
         System.out.println("\nAperte ENTER para voltar. ");
         console.nextLine();
     }

@@ -1,19 +1,11 @@
 package Menu;
 
-import java.util.Scanner;
-
+import java.util.*;
 import Entidades.Lista;
 import Entidades.ListaProduto;
 import Entidades.Produto;
-import aed3.ArvoreBMais;
-import aed3.HashExtensivel;
-import aed3.ParIDGTIN;
-import aed3.ParUsuarioLista;
-import Arquivos.ArquivoLista;
-import Arquivos.ArquivoListaProduto;
-import Arquivos.ArquivoProduto;
-import Arquivos.ArquivoUsuario;
-//import Menu.MenuUsuario;
+import aed3.*;
+import Arquivos.*;
 
 public class MenuProduto {
     public Scanner console;
@@ -23,15 +15,15 @@ public class MenuProduto {
     public ArquivoLista arqList;
     public HashExtensivel<ParIDGTIN> iCode;
     public ArvoreBMais<ParUsuarioLista> arvoreLista;
-   // public MenuUsuario menuUsu;
+    public ListaInvertida listaInvertida;
 
     public MenuProduto() throws Exception {
         arqUsu = new ArquivoUsuario();
+        listaInvertida = new ListaInvertida(10, "arqPalavras.db", "arqBlocos.db");
         arqList = new ArquivoLista();
-        arqListaProduto = new ArquivoListaProduto(); // ✅ inicializa aqui
-        arqProduto = new ArquivoProduto(); // Inicializando o arquivo de produtos
+        arqListaProduto = new ArquivoListaProduto();
+        arqProduto = new ArquivoProduto();
         console = new Scanner(System.in);
-       /// menuUsu = new MenuUsuario();
 
         iCode = new HashExtensivel<>(ParIDGTIN.class.getConstructor(),
                 4,
@@ -54,6 +46,7 @@ public class MenuProduto {
             System.out.println("1 - Buscar produtos por GTIN");
             System.out.println("2 - Listar todos os Produtos");
             System.out.println("3 - Cadastrar um novo Produto");
+            System.out.println("4 - Buscar produtos por palavra");
             System.out.print("\nOpção: ");
 
             opcao = console.nextInt();
@@ -61,18 +54,21 @@ public class MenuProduto {
             switch (opcao) {
                 case 0:
                     System.out.println("Voltando...");
-                    //menuUsu.menuUsuario1();
                     break;
                 case 1:
                     buscarProduto(idUsuario);
                     break;
                 case 2:
-                    verProduto(listarProdutos(idUsuario), idUsuario); 
+                    verProduto(listarProdutos(idUsuario), idUsuario);
                     break;
                 case 3:
                     cadastrarProduto(idUsuario);
                     break;
+                case 4:
+                    buscarProdutoPorPalavra(idUsuario);
+                    break;
                 default:
+                    System.out.println("Opção inválida.");
                     break;
             }
         } while (opcao != 0);
@@ -82,9 +78,12 @@ public class MenuProduto {
         System.out.println("\n\n\n---------");
         System.out.println("> Produtos - Cadastro de Novo Produto");
 
-        System.out.print("GTIN-13: ");
-        console.nextLine(); // consumir enter pendente
-        String gtin = console.nextLine();
+        console.nextLine();
+        String gtin;
+        do {
+            System.out.print("GTIN-13: (13 caracteres): ");
+            gtin = console.nextLine();
+        } while (gtin.length() != 13);
 
         System.out.print("Nome do Produto: ");
         String nome = console.nextLine();
@@ -96,9 +95,21 @@ public class MenuProduto {
         int id = arqProduto.create(produto);
         iCode.create(new ParIDGTIN(produto.getGtin13(), id));
 
-        // Se tiver índice, você pode criar aqui
-        // iCode.create(new ParIDGTIN(produto.getCodigoCompartilhavel(), id));
-        // arvoreProduto.create(new ParUsuarioProduto(idUsuario, id));
+        // --- Inserir no índice invertido ---
+        String[] palavras = nome.toLowerCase().split("\\s+");
+        Map<String, Integer> freq = new HashMap<>();
+        for (String p : palavras) {
+            p = p.replaceAll("[^a-z0-9áéíóúãõç]", "");
+            if (p.isEmpty()) continue;
+            freq.put(p, freq.getOrDefault(p, 0) + 1);
+        }
+
+        for (Map.Entry<String, Integer> entry : freq.entrySet()) {
+            String termo = entry.getKey();
+            float tf = entry.getValue();
+            ElementoLista el = new ElementoLista(produto.getId(), tf);
+            listaInvertida.create(termo, el);
+        }
 
         System.out.println("\n✅ Produto cadastrado com sucesso! (ID = " + id + ")");
     }
@@ -108,23 +119,22 @@ public class MenuProduto {
         System.out.println("> Produtos - Listagem de Todos os Produtos");
         System.out.println("---------");
 
-        int index = 1; // contador para exibição numerada
+        int index = 1;
         int escolhido = -1;
 
-        for (int i = 1; i <= arqProduto.tamanho(); i++) { // IDs começam em 1
+        for (int i = 1; i <= arqProduto.tamanho(); i++) {
             Produto p = arqProduto.read(i);
             if (p != null) {
-                if(p.isAtivo()) {
+                if (p.isAtivo()) {
                     System.out.println("(" + index + ") " + p.getNome() + " - " + p.getDescricao());
-                }
-                else {
-                    System.out.println("(" + index + ") " + p.getNome() + " - " + p.getDescricao() + " - (INATIVO)");
+                } else {
+                    System.out.println("(" + index + ") " + p.getNome() + " - " + p.getDescricao() + " (INATIVO)");
                 }
                 index++;
             }
         }
 
-        if (index == 1) { // não encontrou nenhum produto
+        if (index == 1) {
             System.out.println("Nenhum produto cadastrado.");
             return -1;
         }
@@ -133,14 +143,13 @@ public class MenuProduto {
         int opcao = console.nextInt();
 
         if (opcao >= 1 && opcao < index) {
-            // Encontrar o ID real do produto selecionado
             int count = 0;
             for (int i = 1; i <= arqProduto.tamanho(); i++) {
                 Produto p = arqProduto.read(i);
                 if (p != null) {
                     count++;
                     if (count == opcao) {
-                        escolhido = i; // ID real do produto
+                        escolhido = i;
                         break;
                     }
                 }
@@ -152,11 +161,10 @@ public class MenuProduto {
         return escolhido;
     }
 
-    // Ver detalhes de um produto
     public void verProduto(int idProduto, int idUsuario) throws Exception {
         Produto produto = arqProduto.read(idProduto);
         if (produto != null) {
-            System.out.println("\nEasy Gift 2.0");
+            System.out.println("\nEasy Gift 3.0");
             System.out.println("-----------------");
             System.out.println("> Início > Produtos > Listagem > " + produto.getNome() + "\n");
 
@@ -169,8 +177,7 @@ public class MenuProduto {
             int listasOutros = 0;
 
             try {
-                // Percorre o arquivo ListaProduto manualmente
-                arqListaProduto.arquivo.seek(12); // pula cabeçalho
+                arqListaProduto.arquivo.seek(12);
                 System.out.println("Aparece nas minhas listas:");
                 while (arqListaProduto.arquivo.getFilePointer() < arqListaProduto.arquivo.length()) {
                     long pos = arqListaProduto.arquivo.getFilePointer();
@@ -180,12 +187,11 @@ public class MenuProduto {
                     if (lapide == ' ') {
                         byte[] ba = new byte[tam];
                         arqListaProduto.arquivo.read(ba);
-
                         ListaProduto lp = new ListaProduto();
                         lp.fromByteArray(ba);
 
                         if (lp.getIdProduto() == idProduto) {
-                            Lista lista = arqList.read(lp.getIdLIsta()); // arqList = arquivo de Listas
+                            Lista lista = arqList.read(lp.getIdLIsta());
                             if (lista != null) {
                                 if (lista.getIdUsuario() == idUsuario) {
                                     System.out.println("- " + lista.getNome());
@@ -196,7 +202,6 @@ public class MenuProduto {
                             }
                         }
                     } else {
-                        // pula registros excluídos
                         arqListaProduto.arquivo.skipBytes(tam);
                     }
                 }
@@ -219,8 +224,7 @@ public class MenuProduto {
                     editarProduto(idProduto);
                     break;
                 case "2":
-                    // implementar inativarProduto(idProduto)
-                      inativarProduto(idProduto);
+                    inativarProduto(idProduto);
                     break;
                 case "R":
                     return;
@@ -228,7 +232,6 @@ public class MenuProduto {
                     System.out.println("Opção inválida.");
                     break;
             }
-
         } else {
             System.out.println("\nProduto não encontrado.");
         }
@@ -242,7 +245,6 @@ public class MenuProduto {
         String gtin = console.nextLine();
 
         try {
-            // Buscar no índice hash pelo GTIN-13
             ParIDGTIN pcid = iCode.read(new ParIDGTIN(gtin, -1).hashCode());
             if (pcid != null) {
                 Produto produto = arqProduto.read(pcid.getId());
@@ -261,13 +263,55 @@ public class MenuProduto {
         }
     }
 
+    public void buscarProdutoPorPalavra(int idUsuario) throws Exception {
+        console = new Scanner(System.in);
+        System.out.println("\n\n---------");
+        System.out.println("> Produtos - Buscar por Palavra");
+        System.out.print("Digite a palavra ou frase de busca: ");
+        String consulta = console.nextLine().toLowerCase();
+
+        String[] termos = consulta.split("\\s+");
+        Map<Integer, Float> scores = new HashMap<>();
+        int N = arqProduto.tamanho();
+
+        for (String termo : termos) {
+            ElementoLista[] lista = listaInvertida.read(termo);
+            if (lista.length == 0) continue;
+
+            int df = lista.length;
+            float idf = (float) Math.log((float) N / (1 + df));
+
+            for (ElementoLista el : lista) {
+                float tf = el.getFrequencia();
+                float tfidf = tf * idf;
+                scores.put(el.getId(), scores.getOrDefault(el.getId(), 0f) + tfidf);
+            }
+        }
+
+        if (scores.isEmpty()) {
+            System.out.println("\nNenhum produto encontrado para '" + consulta + "'.");
+            return;
+        }
+
+        List<Map.Entry<Integer, Float>> ordenados = new ArrayList<>(scores.entrySet());
+        ordenados.sort((a, b) -> Float.compare(b.getValue(), a.getValue()));
+
+        System.out.println("\nResultados de busca:");
+        for (Map.Entry<Integer, Float> e : ordenados) {
+            Produto p = arqProduto.read(e.getKey());
+            if (p != null && p.isAtivo()) {
+                System.out.printf("- %s (%.3f)\n", p.getNome(), e.getValue());
+            }
+        }
+    }
+
     public void editarProduto(int idProduto) throws Exception {
         Produto produto = arqProduto.read(idProduto);
         if (produto != null) {
             System.out.println("\n--- Editar Produto ---");
             System.out.println("Produto atual: " + produto.getNome() + " - " + produto.getDescricao());
 
-            console.nextLine(); // consumir enter pendente
+            console.nextLine();
             System.out.print("Novo nome (Enter para manter atual): ");
             String novoNome = console.nextLine();
             if (!novoNome.isEmpty()) {
@@ -299,7 +343,7 @@ public class MenuProduto {
                 return;
             }
 
-            produto.setAtivo(false); // marca como inativo
+            produto.setAtivo(false);
             boolean atualizado = arqProduto.update(produto);
             if (atualizado) {
                 System.out.println("✅ Produto inativado com sucesso!");
@@ -310,5 +354,4 @@ public class MenuProduto {
             System.out.println("Produto não encontrado.");
         }
     }
-
 }

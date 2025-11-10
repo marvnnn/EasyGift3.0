@@ -79,23 +79,36 @@ public class MenuListaProduto {
     /**
      * Inclui um produto em uma lista
      */
-    public void incluirProduto(int idLista, int idUsuario) throws Exception {
-        int idProduto = menuProduto.listarProdutos(idUsuario); // Lista produtos e retorna o ID escolhido
+    public void incluirProduto(int idLista, int idUsuario) {
+        try {
+            int idProduto = menuProduto.listarProdutos(idUsuario); // Lista produtos e retorna o ID escolhido
         if (idProduto != -1) {
-            // Criando a relação ListaProduto com quantidade 1 e observações vazias por
-            // padrão
-            System.out.println("Digite a quantidade: ");
-            int quantidade = console.nextInt();
-            console.nextLine();
-            System.out.println("Digite as observações: ");
-            String observacoes = console.nextLine();
-            ListaProduto lp = new ListaProduto(idLista, idProduto, quantidade, observacoes);
-            int id = arqListaProduto.create(lp);
-            indiceListaProduto.create(new ParIDListaProduto(idLista, idProduto));
-            System.out.println("✅ Produto adicionado à lista (ID da relação = " + id + ")");
+            Produto p = arqProduto.read(idProduto);
+            if(p.isAtivo()) {
+                System.out.println("Digite a quantidade: ");
+                int quantidade = console.nextInt();
+                console.nextLine();
+                System.out.println("Digite as observações: ");
+                String observacoes = console.nextLine();
+                ListaProduto lp = new ListaProduto(idLista, idProduto, quantidade, observacoes);
+                //System.out.println("a");
+                int id = arqListaProduto.create(lp);
+                //System.out.println("b");
+                indiceListaProduto.create(new ParIDListaProduto(idLista, idProduto));
+                System.out.println("c");
+                System.out.println("✅ Produto adicionado à lista (ID da relação = " + id + ")");
+            }
+            else {
+                System.out.println("Não foi possível adicionar o produto a lista pois ele está INATIVO.");
+            }
+            
         } else {
             System.out.println("Nenhum produto selecionado.");
         }
+        } catch(Exception e) {
+            System.out.println(e.getLocalizedMessage());
+        }
+        
     }
 
     /**
